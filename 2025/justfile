@@ -1,6 +1,0 @@
-init day:
-  mkdir day{{day}}
-  dune init project day{{day}}
-
-run day:
-  cd day{{day}} && dune exec bin/main.exe
