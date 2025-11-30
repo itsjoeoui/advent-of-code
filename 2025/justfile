@@ -1,0 +1,3 @@
+init day:
+  mkdir day{{day}}
+  cd day{{day}} && dune init executable day{{day}}
