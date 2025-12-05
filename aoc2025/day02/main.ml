@@ -43,11 +43,8 @@ let part1 (ranges : range list) : int =
 let part2 (ranges : range list) : int =
   ranges |> List.map count_invalid_part_2 |> List.fold_left ( + ) 0
 
-let read_input_all (filename : string) : string =
-  In_channel.with_open_text filename In_channel.input_all |> String.trim
-
 let solve (filename : string) : int * int =
-  let ranges = read_input_all filename |> parse_ranges in
+  let ranges = Aoc2025.read_input_all filename |> parse_ranges in
   (part1 ranges, part2 ranges)
 
 let () =

@@ -1,6 +1,3 @@
-let read_input_lines (filename : string) : string list =
-  In_channel.with_open_text filename In_channel.input_lines
-
 let largest (length : int) (line : string) : int =
   let line_length = String.length line in
 
@@ -34,7 +31,7 @@ let part2 (lines : string list) : int =
   lines |> List.map (largest 12) |> List.fold_left ( + ) 0
 
 let () =
-  let lines = read_input_lines "./day03/input.txt" in
+  let lines = Aoc2025.read_input_lines "./day03/input.txt" in
 
   let part1_result = part1 lines in
   Printf.printf "Part 1: %d\n" part1_result;

@@ -1,9 +1,6 @@
 type direction = Left | Right
 type rotation = { dir : direction; distance : int }
 
-let read_input (filename : string) : string list =
-  In_channel.with_open_text filename In_channel.input_lines
-
 let parse_rotation (line : string) =
   match line.[0] with
   | 'L' ->
@@ -58,7 +55,7 @@ let part2 (rotations : rotation list) : int =
   process 50 rotations 0
 
 let solve (filename : string) : int * int =
-  let lines = read_input filename in
+  let lines = Aoc2025.read_input_lines filename in
   let rotations = List.map parse_rotation lines in
   let result1 = part1 rotations in
   let result2 = part2 rotations in
