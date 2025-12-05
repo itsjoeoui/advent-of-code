@@ -3,28 +3,33 @@ type grid = char array array
 let directions =
   [ (0, 1); (1, 0); (0, -1); (-1, 0); (1, 1); (1, -1); (-1, 1); (-1, -1) ]
 
-let should_remove (grid : grid) (row : int) (col : int) : bool =
-  if grid.(row).(col) <> '@' then false
-  else
-    let rows = Array.length grid in
-    let cols = Array.length grid.(0) in
-    let length =
-      directions
-      |> List.filter (fun (dr, dc) ->
-          let r, c = (row + dr, col + dc) in
-          r >= 0 && r < rows && c >= 0 && c < cols && grid.(r).(c) = '@')
-      |> List.length
-    in
-    length < 4
-
 let remove (grid : grid) : grid * int =
   let rows = Array.length grid in
   let cols = if rows = 0 then 0 else Array.length grid.(0) in
-  let positions_to_update =
-    List.init rows (fun row -> List.init cols (fun col -> (row, col)))
-    |> List.concat
-    |> List.filter (fun (row, col) -> should_remove grid row col)
+
+  let in_bound (row : int) (col : int) : bool =
+    row >= 0 && row < rows && col >= 0 && col < cols
   in
+
+  let should_remove (grid : grid) (row : int) (col : int) : bool =
+    match grid.(row).(col) with
+    | '@' ->
+        directions
+        |> List.filter (fun (dr, dc) ->
+            let r, c = (row + dr, col + dc) in
+            in_bound r c && grid.(r).(c) == '@')
+        |> List.length
+        |> fun len -> len < 4
+    | _ -> false
+  in
+
+  let positions_to_update =
+    List.init rows Fun.id
+    |> List.concat_map (fun row ->
+        List.init cols (fun col -> (row, col))
+        |> List.filter (fun (row, col) -> should_remove grid row col))
+  in
+
   List.iter (fun (row, col) -> grid.(row).(col) <- '.') positions_to_update;
   (grid, List.length positions_to_update)
 
