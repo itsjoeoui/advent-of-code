@@ -27,29 +27,23 @@ let part2 (lines : string list) : int =
     lines |> List.map String.to_seq |> List.map List.of_seq |> List.map List.rev
     |> transpose |> List.concat
   in
-  let rec solve acc temp nums input =
+  let rec solve acc buffer nums input =
     match input with
     | [] -> acc
     | x :: xs -> (
         match x with
         | ' ' ->
-            if temp == "" then solve acc "" nums xs
-            else solve acc "" (int_of_string temp :: nums) xs
+            if buffer == "" then solve acc "" nums xs
+            else solve acc "" (int_of_string buffer :: nums) xs
         | '+' ->
-            if temp == "" then
+            if buffer == "" then
               solve (acc + List.fold_left ( + ) 0 nums) "" [] xs
-            else
-              solve
-                (acc + List.fold_left ( + ) 0 (int_of_string temp :: nums))
-                "" [] xs
+            else solve acc "" (int_of_string buffer :: nums) input
         | '*' ->
-            if temp == "" then
+            if buffer == "" then
               solve (acc + List.fold_left ( * ) 1 nums) "" [] xs
-            else
-              solve
-                (acc + List.fold_left ( * ) 1 (int_of_string temp :: nums))
-                "" [] xs
-        | _ -> solve acc (temp ^ String.make 1 x) nums xs)
+            else solve acc "" (int_of_string buffer :: nums) input
+        | _ -> solve acc (buffer ^ String.make 1 x) nums xs)
   in
   solve 0 "" [] input
 
