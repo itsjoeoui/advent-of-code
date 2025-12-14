@@ -1,4 +1,4 @@
 (executable
- (name main)
- (public_name main)
+ (name template)
+ (public_name template)
  (libraries aoc2025))

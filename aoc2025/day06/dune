@@ -1,4 +1,4 @@
 (executable
- (name main)
- (public_name main)
+ (name day06)
+ (public_name day06)
  (libraries aoc2025))
