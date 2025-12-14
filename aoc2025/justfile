@@ -1,2 +1,2 @@
 run day:
-  @dune exec day{{day}}/main.exe
+  @dune exec day{{day}}/day{{day}}.exe
