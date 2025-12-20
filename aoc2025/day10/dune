@@ -1,4 +1,4 @@
 (executable
  (name day10)
  (public_name day10)
- (libraries aoc2025))
+ (libraries aoc2025 core))
