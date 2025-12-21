@@ -79,8 +79,52 @@ let part1 (problems : problem array) : int =
   Array.fold problems ~init:0 ~f:(fun total_min_presses problem ->
       solve_problem_part_1 problem + total_min_presses)
 
-(* TODO: part2 *)
-let part2 (problems : problem array) : int = Array.length problems
+let solve_problem_part_2 (problem : problem) : int =
+  let ctx = Z3.mk_context [] in
+
+  let opt = Z3.Optimize.mk_opt ctx in
+
+  let x_vals =
+    Array.init (Array.length problem.button_masks) ~f:(fun i ->
+        Z3.Arithmetic.Integer.mk_const_s ctx (Printf.sprintf "x_%d" i))
+  in
+
+  let zero = Z3.Arithmetic.Integer.mk_numeral_i ctx 0 in
+
+  Array.iter x_vals ~f:(fun x_val ->
+      let cons_geq_zero = Z3.Arithmetic.mk_ge ctx x_val zero in
+      Z3.Optimize.add opt [ cons_geq_zero ]);
+
+  let b_vals =
+    Array.init (Array.length problem._joltages) ~f:(fun i ->
+        Z3.Arithmetic.Integer.mk_numeral_i ctx problem._joltages.(i))
+  in
+
+  Array.iteri b_vals ~f:(fun i b_val ->
+      let relevant_buttons =
+        Array.foldi problem.button_masks ~init:[] ~f:(fun j acc mask ->
+            if (mask lsr i) land 1 = 1 then x_vals.(j) :: acc else acc)
+      in
+      let sum_expr = Z3.Arithmetic.mk_add ctx relevant_buttons in
+      let b_eq = Z3.Boolean.mk_eq ctx sum_expr b_val in
+      Z3.Optimize.add opt [ b_eq ]);
+
+  let total_presses_expr = Z3.Arithmetic.mk_add ctx (Array.to_list x_vals) in
+
+  let _ = Z3.Optimize.minimize opt total_presses_expr in
+
+  match Z3.Optimize.check opt with
+  | Z3.Solver.SATISFIABLE ->
+      let model = Option.value_exn (Z3.Optimize.get_model opt) in
+      let result_expr =
+        Option.value_exn (Z3.Model.evaluate model total_presses_expr true)
+      in
+      Int.of_string (Z3.Expr.to_string result_expr)
+  | _ -> failwith "No solution found for part 2"
+
+let part2 (problems : problem array) : int =
+  Array.fold problems ~init:0 ~f:(fun total_presses problem ->
+      solve_problem_part_2 problem + total_presses)
 
 let () =
   let lines = Aoc2025.read_input_lines "./day10/input.txt" in
