@@ -1,56 +1,83 @@
 open Core
 
-type group = int list
-
 type problem = {
-  states : bool array;
-  groups : group array;
-  joltages : int array;
+  target_mask : int;
+  button_masks : int array;
+  _joltages : int array;
 }
 
 let parse_problem (line : string) : problem =
-  let rec parse states groups joltages items =
-    match items with
-    | [] ->
-        {
-          states = Array.of_list states;
-          groups = Array.of_list groups;
-          joltages = Array.of_list joltages;
-        }
-    | item :: rest -> (
+  let items = String.split line ~on:' ' in
+  let initial_parsed = (0, [], []) in
+
+  let target_mask, button_masks_list, joltages_list =
+    List.fold items ~init:initial_parsed ~f:(fun (sm, bml, jl) item ->
         match item.[0] with
         | '[' ->
-            let states =
+            let state_str =
               String.sub item ~pos:1 ~len:(String.length item - 2)
-              |> String.to_list
-              |> List.map ~f:(function
-                | '.' -> false
-                | '#' -> true
-                | _ -> failwith "Invalid state character")
             in
-            parse states groups joltages rest
+            let new_sm =
+              String.foldi state_str ~init:0 ~f:(fun i acc char ->
+                  if Char.equal char '#' then acc lor (1 lsl i) else acc)
+            in
+            (new_sm, bml, jl)
         | '(' ->
             let group =
               String.sub item ~pos:1 ~len:(String.length item - 2)
               |> String.split ~on:',' |> List.map ~f:int_of_string
             in
-            parse states (group :: groups) joltages rest
+            let button_mask =
+              List.fold group ~init:0 ~f:(fun acc light_idx ->
+                  acc lor (1 lsl light_idx))
+            in
+            (sm, button_mask :: bml, jl)
         | '{' ->
-            let joltages =
+            let new_jl =
               String.sub item ~pos:1 ~len:(String.length item - 2)
               |> String.split ~on:',' |> List.map ~f:int_of_string
             in
-            parse states groups joltages rest
+            (sm, bml, new_jl)
         | _ -> failwith ("Unknown item prefix: " ^ item))
   in
-  let items = String.split line ~on:' ' in
-  parse [] [] [] items
+  {
+    target_mask;
+    button_masks = Array.of_list (List.rev button_masks_list);
+    _joltages = Array.of_list joltages_list;
+  }
 
 let parse_problems (lines : string list) : problem array =
   lines |> List.map ~f:parse_problem |> Array.of_list
 
-(* TODO: part1 *)
-let part1 (problems : problem array) : int = Array.length problems
+let solve_problem_part_1 (problem : problem) : int =
+  let num_buttons = Array.length problem.button_masks in
+  let target_mask = problem.target_mask in
+  let button_masks = problem.button_masks in
+
+  let rec dfs button_idx current_lights_mask current_presses =
+    if button_idx = num_buttons then
+      if current_lights_mask = target_mask then current_presses
+      else Int.max_value
+    else
+      let result_without_pressing =
+        dfs (button_idx + 1) current_lights_mask current_presses
+      in
+
+      let button_toggle_mask = button_masks.(button_idx) in
+      let next_lights_mask = current_lights_mask lxor button_toggle_mask in
+
+      let result_with_pressing =
+        dfs (button_idx + 1) next_lights_mask (current_presses + 1)
+      in
+
+      min result_without_pressing result_with_pressing
+  in
+
+  dfs 0 0 0
+
+let part1 (problems : problem array) : int =
+  Array.fold problems ~init:0 ~f:(fun total_min_presses problem ->
+      solve_problem_part_1 problem + total_min_presses)
 
 (* TODO: part2 *)
 let part2 (problems : problem array) : int = Array.length problems
